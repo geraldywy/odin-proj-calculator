@@ -132,7 +132,8 @@ const doOp = (op, stack, e) => {
     1. '123(' => 123x, 
     2. ')123' => x123,
     3. '(+' => (
-    4. '-' => 
+    4. '-+' => '-'
+    5. '--' => '+'
 
 
     returns [idx to resume, result]
