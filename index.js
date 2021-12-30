@@ -135,13 +135,13 @@ const doOp = (op, stack, e) => {
     4. '-' => 
 
 
-    returns [idx to resume, ]
+    returns [idx to resume, result]
 */
 const calc = (elements, i) => {
-    if (i<elements.length && elements[i].val == ")") {  // edge case of ()
+    if (i<elements.length && (elements[i].val == ")" || elements[i].val == "")) {  // edge case of () or empty
         return [i+1, 0]
     }
-    
+
     let stack = [1]
     let lastOp = opMap["x"] // inferred multiplication  )123 => x123
     let err = undefined
@@ -199,7 +199,7 @@ const calc = (elements, i) => {
 
 /*
     Evaluates a stringified mathematical expression. 
-    Returns "ERROR" for illegal expressions.
+    Returns the number result if legal, otherwise "ERROR" for illegal expressions.
 
     Methods requirement:
     1. +, -, *, /, %, (, )
@@ -219,9 +219,26 @@ btns.forEach((btn) => {
         let key = btn.getAttribute("data-key")
         if (prev == "") {
             prev = cur
-            screenPrev.innerHTML = `Ans: ${prev}`
-            cur = "0"
-            initElements()
+            screenPrev.innerHTML = `Prev ans: ${prev}`
+            if (operators.has(key)) {  // user intents to chain with prev
+                elements = [
+                    {
+                        val: `${cur}`,
+                        hasDec: cur % 1 == 0,
+                    },
+                    {
+                        val: "",
+                        hasDec: false,
+                    },
+                ]
+            } else {
+                cur = "0"
+                initElements()
+
+                if (key == "0") {
+                    screenCur.innerHTML = cur
+                }
+            }
         }
         if (key == "=") {
             cur = evaluate(elements)

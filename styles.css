@@ -37,6 +37,11 @@ body {
   letter-spacing: 3px;
 }
 
+.screen .prev {
+  font-size: 20pt;
+  font-weight: 400;
+}
+
 .row {
   flex: 1;
 
