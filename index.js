@@ -163,6 +163,8 @@ const calc = (elements, i) => {
                         curOp = lastOp + 3
                     } else if (lastOp == opMap["-"]) {  // -- = +, double negation
                         curOp = opMap["+"]
+                    } else if (lastOp > 4) {
+                        curOp = lastOp - 3
                     }
                 } else if (curOp == opMap["+"]) {
                     if (lastOp != -1) {
