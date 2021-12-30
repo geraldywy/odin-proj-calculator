@@ -120,7 +120,6 @@ const doOp = (op, stack, e) => {
         case -1:
             break
         default:
-            console.log("unknown op: ", op)
             return "ERROR"
     }
 }
@@ -180,7 +179,7 @@ const calc = (elements, i) => {
                 lastOp = curOp
                 break
             default:   // any number
-                err = doOp(lastOp, stack, parseInt(elements[i].val))
+                err = doOp(lastOp, stack, parseFloat(elements[i].val))
                 if (err != undefined) {
                     return [elements.length, err]
                 }
@@ -217,12 +216,17 @@ const evaluate = (elements) => {
 
 let expr = ""
 
+initElements()
+
 btns.forEach((btn) => {
     btn.addEventListener('click', () => {
         let key = btn.getAttribute("data-key")
-        if (prev == "") {
-            prev = cur
-            screenPrev.innerHTML = `Ans: ${expr} ${prev}`
+        
+        if (key == "=") {
+            expr = cur
+            cur = evaluate(elements)
+
+            screenPrev.innerHTML = `Ans: ${expr} = ${cur}`
             if (operators.has(key) && cur != "ERROR") {  // user intents to chain with prev
                 elements = [
                     {
@@ -237,16 +241,10 @@ btns.forEach((btn) => {
             } else {
                 cur = "0"
                 initElements()
-
                 if (key == "0") {
                     screenCur.innerHTML = cur
                 }
             }
-        }
-        if (key == "=") {
-            expr = cur+ " = "
-            cur = evaluate(elements)
-            prev = ""
         } else if (key == "clear") {
             if (elements[elements.length-1].val == "") {  
                 if (elements.length == 1) {  // ignore
