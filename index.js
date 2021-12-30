@@ -37,6 +37,9 @@ const validate = (elements) => {
     prev = ""
     for (let i in elements) {
         const s = elements[i].val
+        if (s == "") {
+            continue
+        }
 
         if (s.length > 0 && s.charAt(s.length-1) == ".")  {  // digit ending with .
             return false
@@ -61,24 +64,148 @@ const validate = (elements) => {
         prev = s
     }
 
+    if (prev != ")" && operators.has(prev)) {
+        return false
+    }
+
     return openCnt == 0
+}
+
+const opMap = {
+    // standalone ops
+    "+": 0,
+    "-": 1,
+    "x": 2,
+    "/": 3,
+    "%": 4,
+
+    // combined ops
+    "x-": 5,
+    "/-": 6,
+    "%-": 7,
+}
+
+const doOp = (op, stack, e) => {
+    switch (op) {
+        case opMap["+"]:
+            stack.push(e)
+            break
+        case opMap["-"]:
+            stack.push(-e)
+            break
+        case opMap["x"]:
+            stack[stack.length-1] *= e
+            break
+        case opMap["/"]:
+            if (e == 0) {
+                return "ERROR"
+            }
+            stack[stack.length-1] /= e
+            break
+        case opMap["%"]:
+            stack[stack.length-1] %= e
+            break
+        case opMap["x-"]:
+            stack[stack.length-1] *= -e
+            break
+        case opMap["/-"]:
+            if (e == 0) {
+                return "ERROR"
+            }
+            stack[stack.length-1] /= -e
+            break
+        case opMap["%-"]:
+            stack[stack.length-1] %= -e
+            break
+        case -1:
+            break
+        default:
+            console.log("unknown op: ", op)
+            return "ERROR"
+    }
+}
+
+/*
+    Recursive function calling itself when it encounters a '(' character
+
+    concat with some special logic to handle 
+    1. '123(' => 123x, 
+    2. ')123' => x123,
+    3. '(+' => (
+    4. '-' => 
+
+
+    returns [idx to resume, ]
+*/
+const calc = (elements, i) => {
+    let stack = [1]
+    let lastOp = opMap["x"] // inferred multiplication  )123 => x123
+    let err = undefined
+
+    while (i < elements.length && elements[i].val != ")") {
+        switch (elements[i].val) {
+            case "(":
+                const temp = calc(elements, i+1)
+                i = temp[0]
+                if (lastOp == -1) { // inferred multiplication  123( => 123x, 
+                    lastOp = opMap["x"]
+                }
+                err = doOp(lastOp, stack, temp[1])
+                if (err != undefined) {
+                    return [elements.length, err]
+                }
+                lastOp = -1
+                break
+            case "-": case "+": case "x": case "/": case "%": // operators to note
+                let curOp = opMap[elements[i].val]
+                if (curOp == opMap["-"]) {
+                    if (lastOp == opMap["x"] || lastOp == opMap["/"] || lastOp == opMap["%"]) {
+                        curOp = lastOp + 3
+                    } else if (lastOp == opMap["-"]) {  // -- = +, double negation
+                        curOp = opMap["+"]
+                    }
+                } else if (curOp == opMap["+"]) {
+                    if (lastOp != -1) {
+                        curOp = lastOp
+                    }
+                }
+
+                lastOp = curOp
+                break
+            default:   // any number
+                err = doOp(lastOp, stack, parseInt(elements[i].val))
+                if (err != undefined) {
+                    return [elements.length, err]
+                }
+                lastOp = -1
+        }
+
+        i++
+    }
+
+    let res = 0
+    while (stack.length > 0) {
+        res += stack.pop()
+    }
+
+    return [i, res]
 }
 
 /*
     Evaluates a stringified mathematical expression. 
     Returns "ERROR" for illegal expressions.
+
     Methods requirement:
     1. +, -, *, /, %, (, )
     2. Nested expressions are supported
     3. Decimal values are allowed
 */
-const calc = (elements) => {
+const evaluate = (elements) => {
     if (!validate(elements)) {
         return "ERROR"
     }
-    
-    console.log(elements)
-    return "VALID"
+
+    return calc(elements, 0)[1]
 }
 
 btns.forEach((btn) => {
@@ -91,7 +218,7 @@ btns.forEach((btn) => {
             initElements()
         }
         if (key == "=") {
-            cur = calc(elements)
+            cur = evaluate(elements)
             prev = ""
         } else if (key == "clear") {
             if (elements[elements.length-1].val == "") {  
@@ -151,7 +278,6 @@ btns.forEach((btn) => {
         }
 
         screenCur.innerHTML = cur
-        console.log(elements)
     })
 })
 
