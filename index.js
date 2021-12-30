@@ -138,6 +138,10 @@ const doOp = (op, stack, e) => {
     returns [idx to resume, ]
 */
 const calc = (elements, i) => {
+    if (i<elements.length && elements[i].val == ")") {  // edge case of ()
+        return [i+1, 0]
+    }
+    
     let stack = [1]
     let lastOp = opMap["x"] // inferred multiplication  )123 => x123
     let err = undefined
