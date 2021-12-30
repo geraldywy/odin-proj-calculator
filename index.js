@@ -215,13 +215,15 @@ const evaluate = (elements) => {
     return calc(elements, 0)[1]
 }
 
+let expr = ""
+
 btns.forEach((btn) => {
     btn.addEventListener('click', () => {
         let key = btn.getAttribute("data-key")
         if (prev == "") {
             prev = cur
-            screenPrev.innerHTML = `Prev ans: ${prev}`
-            if (operators.has(key)) {  // user intents to chain with prev
+            screenPrev.innerHTML = `Ans: ${expr} ${prev}`
+            if (operators.has(key) && cur != "ERROR") {  // user intents to chain with prev
                 elements = [
                     {
                         val: `${cur}`,
@@ -242,6 +244,7 @@ btns.forEach((btn) => {
             }
         }
         if (key == "=") {
+            expr = cur+ " = "
             cur = evaluate(elements)
             prev = ""
         } else if (key == "clear") {
